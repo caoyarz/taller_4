@@ -17,6 +17,7 @@ import axios from 'axios';
 import MaterialDatatable from "material-datatable";
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import InputLabel from '@material-ui/core/InputLabel'
 const useStyles = makeStyles((theme) => ({
   paper: {
     marginTop: theme.spacing(8),
@@ -38,6 +39,9 @@ const useStyles = makeStyles((theme) => ({
   },
   delete: {
     backgroundColor: "red"
+  },
+  select:{
+    width: '100%'
   }
 
 }));
@@ -46,7 +50,7 @@ export default function Libro() {
   const classes = useStyles();
 
   const { register, handleSubmit, errors, getValues, setValue, reset } = useForm(
-    { defaultValues: { idPersona: "Persona *", libro: "Libro *", fecha: ''} });
+    { defaultValues: { idPersona: "Persona *", libro: "Libro *", fecha: "" } });
 
   const [libros, setLibros] = useState([])
   const [accion, setAccion] = useState("Guardar")
@@ -54,8 +58,7 @@ export default function Libro() {
   const [personas, setPersonas] = useState([])
   const [prestamos,setPrestamos] = useState([])
   var date = new Date();
-  const fecha =useState(date.getFullYear() + "-" + (date.getMonth() +1) + "-" + date.getDate())
-
+  const f = date.getFullYear() + "-" + (date.getMonth() +1) + "-" + date.getDate()
   useEffect(() => {
     cargarLibro();
     cargarPersonas();
@@ -65,17 +68,24 @@ export default function Libro() {
   const columns = [
     {
       name: 'Libro',
-      field: 'libro.nombre'
+      field: 'idlibro'
     },
     {
       name: 'Persona',
-      field:'persona.nombre'
+      field:'persona'
     },
     {
       name: 'Fecha',
       field: 'fecha'
     }
   ];
+  const items = () => {
+    return prestamos.reduce((acum, prestamo) => acum.concat({
+      idlibro: prestamo.libro? prestamo.libro.nombre:'no existe libro asignado',
+      persona: prestamo.persona? prestamo.persona.nombre:'no existe persona asignada',
+      fecha:prestamo.fecha? prestamo.fecha :'sin fecha registrada'
+    }), []);
+  };
 
   const options = {
     selectableRows: false,
@@ -103,8 +113,8 @@ export default function Libro() {
   const onSubmit = data => {
 
     if (accion == "Guardar") {
-      console.log(data)
-      if(data.fecha) {
+      data.fecha = f
+      if(data.fecha && data.persona && data.libro) {
         axios
           .post("http://localhost:9000/api/prestamo", data, {
             headers: {
@@ -137,7 +147,7 @@ export default function Libro() {
             console.log(error);
           });
         }
-        else {alert('Error con el registro')}
+        else {alert('Error con el registro, todos los datos son requeridos')}
     }
   }
   const cargarLibro = async () => {
@@ -167,6 +177,9 @@ const cargarPersonas = async () => {
     <Container component="main" maxWidth="md">
       <CssBaseline />
       <div className={classes.paper}>
+      <Typography component="h1" variant="h5">
+          Prestamos
+        </Typography>
         <Button
           type="button"
           fullWidth
@@ -180,7 +193,11 @@ const cargarPersonas = async () => {
         <form className={classes.form} onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
+            <InputLabel shrink id="demo-simple-select-placeholder-label-label">
+              Personas
+            </InputLabel>
             <Select
+                className={classes.select}
                 labelId="demo-customized-select-label"
                 id="demo-customized-select"
                 inputProps={{
@@ -204,7 +221,11 @@ const cargarPersonas = async () => {
               </Select>
             </Grid>
             <Grid item xs={12} sm={6}>
+              <InputLabel shrink id="demo-simple-select-placeholder-label-label">
+                Libros
+              </InputLabel>
               <Select
+                className={classes.select}
                 labelId="demo-customized-select-label"
                 id="demo-customized-select"
                 inputProps={{
@@ -228,28 +249,7 @@ const cargarPersonas = async () => {
               </Select>
             </Grid>
             <Grid item xs={12}>
-            <TextField
-                name="fecha"
-                variant="outlined"
-                disabled
-                fullWidth
-                autoComplete="fecha"
-                label="Fecha"
-                inputProps={{
-                  inputRef: (ref) => {
-                    if (!ref) return;
-                    setValue("fecha", fecha[0])
-                    register({
-                      name: "fecha",
-                      value: ref.value,
-                    });
-                  },
-                }}
-              >{
-                console.log(fecha[0])
-              }
-               
-              </TextField>
+              
             </Grid>
           </Grid>
           <Button
@@ -263,9 +263,8 @@ const cargarPersonas = async () => {
           </Button>
           <Grid container spacing={1}>
             <MaterialDatatable
-
-              title={"Libros"}
-              data={prestamos}
+              title={"Prestamos"}
+              data={items()}
               columns={columns}
               options={options}
             />

@@ -17,6 +17,7 @@ import axios from 'axios';
 import MaterialDatatable from "material-datatable";
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import InputLabel from '@material-ui/core/InputLabel'
 const useStyles = makeStyles((theme) => ({
   paper: {
     marginTop: theme.spacing(8),
@@ -38,6 +39,9 @@ const useStyles = makeStyles((theme) => ({
   },
   delete: {
     backgroundColor: "red"
+  },
+  select:{
+    width: '100%'
   }
 
 }));
@@ -46,7 +50,7 @@ export default function Libro() {
   const classes = useStyles();
 
   const { register, handleSubmit, errors, getValues, setValue, reset } = useForm(
-    { defaultValues: { nombre: "Nombre *",idautor:'', codigo: "Código *"} });
+    { defaultValues: { nombre: "",idautor:'', codigo: ""} });
 
   const [contador, setContador] = useState(0)
   const [libros, setLibros] = useState([])
@@ -66,15 +70,20 @@ export default function Libro() {
     },
     {
       name: 'Autor',
-      field:'autor.nombre'
+      field:'autor'
     },
     {
       name: 'Codigo',
       field: 'codigo'
     }
-
-
   ];
+  const items = () => {
+    return libros.reduce((acum, libro) => acum.concat({
+      nombre: libro.nombre,
+      codigo: libro.codigo,
+      autor: libro.autor?libro.autor.nombre : 'sin autor'
+    }), []);
+  };
 
 
   const options = {
@@ -103,36 +112,40 @@ export default function Libro() {
   const onSubmit = data => {
 
     if (accion == "Guardar") {
-      axios
-        .post("http://localhost:9000/api/libro", data, {
-          headers: {
-            Accept: '*/*'
-          }
-        })
-        .then(
-          (response) => {
-            if (response.status == 200) {
-              alert("Registro ok")
-              cargarLibro();
-              reset();
+      if(data.nombre && data.codigo && data.autor){
+        axios
+          .post("http://localhost:9000/api/libro", data, {
+            headers: {
+              Accept: '*/*'
             }
-          },
-          (error) => {
+          })
+          .then(
+            (response) => {
+              if (response.status == 200) {
+                alert("Registro ok")
+                cargarLibro();
+                reset();
+              }
+            },
+            (error) => {
+              // Swal.fire(
+              //   "Error",
+              //   "No es posible realizar esta acción: " + error.message,
+              //   "error"
+              // );
+            }
+          )
+          .catch((error) => {
             // Swal.fire(
             //   "Error",
-            //   "No es posible realizar esta acción: " + error.message,
+            //   "No cuenta con los permisos suficientes para realizar esta acción",
             //   "error"
             // );
-          }
-        )
-        .catch((error) => {
-          // Swal.fire(
-          //   "Error",
-          //   "No cuenta con los permisos suficientes para realizar esta acción",
-          //   "error"
-          // );
-          console.log(error);
-        });
+            console.log(error);
+          });
+      }else {
+        alert('Error con el registro, todos los datos son requeridos')
+      }
     }
   }
   const cargarLibro = async () => {
@@ -154,6 +167,9 @@ const cargarAutores = async () => {
     <Container component="main" maxWidth="md">
       <CssBaseline />
       <div className={classes.paper}>
+      <Typography component="h1" variant="h5">
+          Libros
+        </Typography>
         <Button
           type="button"
           fullWidth
@@ -179,8 +195,11 @@ const cargarAutores = async () => {
               />
             </Grid>
             <Grid item xs={12} sm={6}>
+            <InputLabel shrink id="demo-simple-select-placeholder-label-label">
+              Autor
+            </InputLabel>
               <Select
-              
+                className={classes.select}
                 labelId="demo-customized-select-label"
                 id="demo-customized-select"
                 autoComplete ="fautor"
@@ -232,7 +251,7 @@ const cargarAutores = async () => {
             <MaterialDatatable
 
               title={"Libros"}
-              data={libros}
+              data={items()}
               columns={columns}
               options={options}
             />
