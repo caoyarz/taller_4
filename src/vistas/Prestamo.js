@@ -46,36 +46,36 @@ export default function Libro() {
   const classes = useStyles();
 
   const { register, handleSubmit, errors, getValues, setValue, reset } = useForm(
-    { defaultValues: { nombre: "Nombre *",idautor:'', codigo: "Código *"} });
+    { defaultValues: { idPersona: "Persona *", libro: "Libro *", fecha: ''} });
 
-  const [contador, setContador] = useState(0)
   const [libros, setLibros] = useState([])
   const [accion, setAccion] = useState("Guardar")
   const [idLibro, setIdLibro] = useState(null);
-  const [autores, setAutores] = useState([])
+  const [personas, setPersonas] = useState([])
+  const [prestamos,setPrestamos] = useState([])
+  var date = new Date();
+  const fecha =useState(date.getFullYear() + "-" + (date.getMonth() +1) + "-" + date.getDate())
 
   useEffect(() => {
     cargarLibro();
-    cargarAutores();
+    cargarPersonas();
+    cargarPrestamos();
   }, []);
 
   const columns = [
     {
-      name: 'Nombre',
-      field: 'nombre'
+      name: 'Libro',
+      field: 'libro.nombre'
     },
     {
-      name: 'Autor',
-      field:'autor.nombre'
+      name: 'Persona',
+      field:'persona.nombre'
     },
     {
-      name: 'Codigo',
-      field: 'codigo'
+      name: 'Fecha',
+      field: 'fecha'
     }
-
-
   ];
-
 
   const options = {
     selectableRows: false,
@@ -103,36 +103,41 @@ export default function Libro() {
   const onSubmit = data => {
 
     if (accion == "Guardar") {
-      axios
-        .post("http://localhost:9000/api/libro", data, {
-          headers: {
-            Accept: '*/*'
-          }
-        })
-        .then(
-          (response) => {
-            if (response.status == 200) {
-              alert("Registro ok")
-              cargarLibro();
-              reset();
+      console.log(data)
+      if(data.fecha) {
+        axios
+          .post("http://localhost:9000/api/prestamo", data, {
+            headers: {
+              Accept: '*/*'
             }
-          },
-          (error) => {
+          })
+          .then(
+            (response) => {
+              if (response.status == 200) {
+                alert("Registro ok")
+                cargarPrestamos();
+                reset();
+              }
+            },
+            (error) => {
+              alert ('Error con el registro')
+              // Swal.fire(
+              //   "Error",
+              //   "No es posible realizar esta acción: " + error.message,
+              //   "error"
+              // );
+            }
+          )
+          .catch((error) => {
             // Swal.fire(
             //   "Error",
-            //   "No es posible realizar esta acción: " + error.message,
+            //   "No cuenta con los permisos suficientes para realizar esta acción",
             //   "error"
             // );
-          }
-        )
-        .catch((error) => {
-          // Swal.fire(
-          //   "Error",
-          //   "No cuenta con los permisos suficientes para realizar esta acción",
-          //   "error"
-          // );
-          console.log(error);
-        });
+            console.log(error);
+          });
+        }
+        else {alert('Error con el registro')}
     }
   }
   const cargarLibro = async () => {
@@ -143,12 +148,20 @@ export default function Libro() {
     setLibros(data.libroConAutor);
 
   };
-const cargarAutores = async () => {
+const cargarPersonas = async () => {
     // const { data } = await axios.get('/api/zona/listar');
 
-    const { data } = await axios.get("http://localhost:9000/api/autor");
+    const { data } = await axios.get("http://localhost:9000/api/personas");
 
-    setAutores(data.autor);
+    setPersonas(data.persona);
+  };
+
+  const cargarPrestamos = async () => {
+    // const { data } = await axios.get('/api/zona/listar');
+
+    const { data } = await axios.get("http://localhost:9000/api/prestamo");
+
+    setPrestamos(data.resultado);
   };
   return (
     <Container component="main" maxWidth="md">
@@ -167,57 +180,77 @@ const cargarAutores = async () => {
         <form className={classes.form} onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <TextField
-                autoComplete="fname"
-                name="nombre"
-                variant="outlined"
-                required
-                fullWidth
-                label="Nombre"
-                autoFocus
-                inputRef={register}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Select
-              
+            <Select
                 labelId="demo-customized-select-label"
                 id="demo-customized-select"
-                autoComplete ="fautor"
                 inputProps={{
                   inputRef: (ref) => {
                     if (!ref) return;
-                    setValue("idautor", ref.value)
+                    setValue("idPersona", ref.value)
                     register({
-                      name: "idautor",
+                      name: "idPersona",
                       value: ref.value,
                     });
                   },
                 }}
              >
-               <MenuItem  disabled>Seleccionar un autor</MenuItem>
+               <MenuItem  disabled>Seleccionar una persona</MenuItem>
                {
-                  autores.map((autor) => 
-                    <MenuItem key={autor._id} value={autor._id} name="idautor">{autor.nombre}</MenuItem>
+                  personas.map((persona) => 
+                    <MenuItem key={persona._id} value={persona._id} name="idautor">{persona.nombre}</MenuItem>
+                  )
+               }
+              
+              </Select>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Select
+                labelId="demo-customized-select-label"
+                id="demo-customized-select"
+                inputProps={{
+                  inputRef: (ref) => {
+                    if (!ref) return;
+                    setValue("libro", ref.value)
+                    register({
+                      name: "libro",
+                      value: ref.value,
+                    });
+                  },
+                }}
+             >
+               <MenuItem  disabled>Seleccionar un libro</MenuItem>
+               {
+                  libros.map((libro) => 
+                    <MenuItem key={libro._id} value={libro._id} name="libro">{libro.nombre}</MenuItem>
                   )
                }
               
               </Select>
             </Grid>
             <Grid item xs={12}>
-              <TextField
+            <TextField
+                name="fecha"
                 variant="outlined"
-                required
+                disabled
                 fullWidth
-                name="codigo"
-                label="codigo"
-                id="codigo"
-                autoComplete="codigo"
-                inputRef={register}
-
-              />
+                autoComplete="fecha"
+                label="Fecha"
+                inputProps={{
+                  inputRef: (ref) => {
+                    if (!ref) return;
+                    setValue("fecha", fecha[0])
+                    register({
+                      name: "fecha",
+                      value: ref.value,
+                    });
+                  },
+                }}
+              >{
+                console.log(fecha[0])
+              }
+               
+              </TextField>
             </Grid>
-
           </Grid>
           <Button
             type="submit"
@@ -232,7 +265,7 @@ const cargarAutores = async () => {
             <MaterialDatatable
 
               title={"Libros"}
-              data={libros}
+              data={prestamos}
               columns={columns}
               options={options}
             />

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React,{useEffect} from 'react';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
@@ -9,6 +10,7 @@ import Box from '@material-ui/core/Box';
 import Autor from './Autor'
 import Libro from './libro';
 import Usuario from './Usuario'
+import Prestamo from './Prestamo'
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -70,14 +72,14 @@ export default function MenuTabs() {
     <div className={classes.root}>
       <AppBar position="static">
         <Tabs value={value} onChange={handleChange} aria-label="simple tabs example">
-          <Tab label="Item One" {...a11yProps(0)} />
+          <Tab label="Prestamo" {...a11yProps(0)} />
           <Tab label="Autor" {...a11yProps(1)} />
           <Tab label="Usuario" {...a11yProps(2)} />
-          <Tab label="Nuevo" {...a11yProps(3)} />
+          <Tab label="Libro" {...a11yProps(3)} />
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>
-    <Libro/>
+        <Prestamo/>
       </TabPanel>
       <TabPanel value={value} index={1}>
         <Autor/>
@@ -85,9 +87,8 @@ export default function MenuTabs() {
       <TabPanel value={value} index={2}>
         <Usuario/>
       </TabPanel>
-
       <TabPanel value={value} index={3}>
-       Aqui va a ir el menu nuevo
+       <Libro/>
       </TabPanel>
     </div>
   );
