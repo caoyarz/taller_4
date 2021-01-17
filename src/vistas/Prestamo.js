@@ -68,11 +68,11 @@ export default function Libro() {
   const columns = [
     {
       name: 'Libro',
-      field: 'idlibro'
+      field: 'libro'
     },
     {
       name: 'Persona',
-      field:'persona'
+      field:'idPersona'
     },
     {
       name: 'Fecha',
@@ -81,8 +81,8 @@ export default function Libro() {
   ];
   const items = () => {
     return prestamos.reduce((acum, prestamo) => acum.concat({
-      idlibro: prestamo.libro? prestamo.libro.nombre:'no existe libro asignado',
-      persona: prestamo.persona? prestamo.persona.nombre:'no existe persona asignada',
+      libro: prestamo.libro? prestamo.libro.nombre:'no existe libro asignado',
+      idPersona: prestamo.persona? prestamo.persona.nombre:'no existe persona asignada',
       fecha:prestamo.fecha? prestamo.fecha :'sin fecha registrada'
     }), []);
   };
@@ -114,7 +114,7 @@ export default function Libro() {
 
     if (accion == "Guardar") {
       data.fecha = f
-      if(data.fecha && data.persona && data.libro) {
+      if(data.fecha && data.idPersona && data.libro) {
         axios
           .post("http://localhost:9000/api/prestamo", data, {
             headers: {
